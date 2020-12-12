@@ -1,3 +1,4 @@
+#![warn( clippy::all, clippy::pedantic )]
 use std::ops::{AddAssign, Sub};
 use std::hash::Hash;
 use std::collections::HashMap;
@@ -25,11 +26,10 @@ pub trait IterAlgorithms : Iterator {
 }
 impl<T> IterAlgorithms for T where T: Iterator {}
 
-
 pub struct ConsecutiveSubsequencesSum<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + Clone> where T: Iterator<Item = &'a I>  {
     iter : Fuse<Enumerate<T>>,
     goal : I,
-    rolling : I,
+    prefix_sum: I,
     table : HashMap<I,usize>,
 }
 impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + Clone> ConsecutiveSubsequencesSum<'a,T,I> where T: Iterator<Item = &'a I>  {
@@ -38,7 +38,7 @@ impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + C
         table.insert( Default::default(), 0 );
         Self{
             iter: iter.enumerate().fuse(), goal,
-            rolling: Default::default(),
+            prefix_sum: Default::default(),
             table
         }
     }
@@ -48,7 +48,7 @@ impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + C
         table.insert( Default::default(), 0 );
         Self{
             iter: iter.enumerate().fuse(), goal,
-            rolling: Default::default(),
+            prefix_sum: Default::default(),
             table
         }
     }
@@ -56,9 +56,9 @@ impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + C
 impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + Clone> Iterator for ConsecutiveSubsequencesSum<'a,T,I> where T: Iterator<Item = &'a I> {    type Item = (usize,usize);
     fn next(&mut self) -> Option<Self::Item> {
         while let Some((j,val)) = self.iter.next() {
-            self.rolling += *val;
-            self.table.insert(self.rolling,j+1);
-            let remain = self.rolling - self.goal;
+            self.prefix_sum += *val;
+            self.table.insert(self.prefix_sum, j+1);
+            let remain = self.prefix_sum - self.goal;
             if let Some(i) = self.table.get(&remain) {
                 return Some((*i, j+1));
             }
@@ -67,10 +67,30 @@ impl<'a,T, I : 'a + Default + AddAssign + Sub<Output = I> + Eq + Hash + Copy + C
     }
 }
 
+pub struct Cycle<T> {
+    pub cycle_at: T,
+    pub n: usize,
+    pub prev_n: usize,
+}
+pub fn find_cycle<T: Hash + Eq + Clone>(mut current : T, advance : impl Fn(T) -> T) -> Cycle<T> {
+    let mut seen : HashMap<T,usize> = HashMap::new();
+    let mut n : usize = 0;
+    while ! seen.contains_key( &current ) {
+        seen.insert(current.clone(),n);
+        current = advance(current);
+        n += 1;
+    }
+    let prev_n = *seen.get( &current ).unwrap();
+    Cycle{
+        cycle_at: current,
+        n, prev_n
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
-    use crate::aoc::algorithm::IterAlgorithms;
+    use crate::aoc::algorithm::{IterAlgorithms, find_cycle};
 
     #[test]
     fn csws() {
@@ -91,5 +111,12 @@ mod tests {
         data.iter().consecutive_subsequences_with_sum( 5);
     }
 
+    #[test]
+    fn test_find_loop() {
+        let cy= find_cycle(0, |n| (n+1) % 6);
+        assert_eq!(cy.cycle_at,0);
+        assert_eq!(cy.n,6);
+        assert_eq!(cy.prev_n,0);
+    }
 }
 

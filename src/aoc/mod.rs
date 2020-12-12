@@ -1,11 +1,13 @@
 #![warn( clippy::all, clippy::pedantic )]
 
 pub mod algorithm;
+pub mod point2d;
 
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
 use std::{io, result};
+use std::time::Instant;
 
 #[derive(Debug)]
 pub enum Error {
@@ -36,4 +38,28 @@ pub fn parse<T: FromStr>(line : io::Result<String>) -> Result<T>{
 #[must_use]
 pub fn parse_unwrap<T: FromStr>(line : io::Result<String>) -> T {
     parse::<T>(line).unwrap()
+}
+
+pub struct CodeTimer(Instant,Instant,bool);
+impl CodeTimer {
+    pub fn new() -> Self {
+        Self(Instant::now(),Instant::now(),false)
+    }
+
+    pub fn split(&mut self, what : &str) {
+        println!("{} took {:?} ({:?} total)",what,self.0.elapsed(),self.1.elapsed());
+        self.0 = Instant::now();
+    }
+
+    pub fn stop(&mut self, what : &str) {
+        println!("{} took {:?} ({:?} total)",what,self.0.elapsed(),self.1.elapsed());
+        self.2 = true;
+    }
+}
+impl Drop for CodeTimer {
+    fn drop(&mut self) {
+        if ! self.2 {
+            println!("Took {:?} ({:?} total)", self.0.elapsed(), self.1.elapsed());
+        }
+    }
 }
