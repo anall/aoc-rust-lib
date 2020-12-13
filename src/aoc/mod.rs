@@ -2,6 +2,7 @@
 
 pub mod algorithm;
 pub mod point2d;
+pub mod math;
 
 use std::fs::File;
 use std::io::BufReader;
