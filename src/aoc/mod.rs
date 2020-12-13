@@ -43,6 +43,7 @@ pub fn parse_unwrap<T: FromStr>(line : io::Result<String>) -> T {
 
 pub struct CodeTimer(Instant,Instant,bool);
 impl CodeTimer {
+    #[must_use]
     pub fn new() -> Self {
         Self(Instant::now(),Instant::now(),false)
     }
@@ -55,6 +56,11 @@ impl CodeTimer {
     pub fn stop(&mut self, what : &str) {
         println!("{} took {:?} ({:?} total)",what,self.0.elapsed(),self.1.elapsed());
         self.2 = true;
+    }
+}
+impl Default for CodeTimer {
+    fn default() -> Self {
+        CodeTimer::new()
     }
 }
 impl Drop for CodeTimer {

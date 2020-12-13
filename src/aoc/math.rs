@@ -3,6 +3,9 @@ pub struct ExtendedGCD {
     pub gcd: i128,
     pub quotients: (i128,i128),
 }
+
+#[must_use]
+#[allow(clippy::similar_names,clippy::many_single_char_names)]
 pub fn extended_gcd(a : i128, b : i128) -> ExtendedGCD {
     let (mut old_r, mut r) = (a,b);
     let (mut old_s, mut s ) = (1,0);
@@ -32,6 +35,7 @@ pub fn extended_gcd(a : i128, b : i128) -> ExtendedGCD {
 }
 
 // FIXME: Make this generic
+#[must_use]
 pub fn chinese_remainder_theorem(inp : Vec<(i128,i128)>) -> (i128,i128) {
     let mut iter = inp.into_iter();
     let (mut n_0,mut a_0) = iter.next().unwrap();
@@ -51,7 +55,7 @@ pub fn chinese_remainder_theorem(inp : Vec<(i128,i128)>) -> (i128,i128) {
             solution = solution % mul + mul;
         }
         if solution > mul {
-            solution = solution % mul;
+            solution %= mul;
         }
 
         n_0 = mul;
