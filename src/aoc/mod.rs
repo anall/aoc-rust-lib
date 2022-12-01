@@ -81,3 +81,50 @@ impl Drop for CodeTimer {
         }
     }
 }
+
+enum NeighborDirection {
+    Sub, Same, Add
+}
+impl NeighborDirection {
+    fn apply(&self, v : usize, max : usize) -> Option<usize> {
+        use NeighborDirection::*;
+        match self {
+            Sub => v.checked_sub(1),
+            Same => Some(v),
+            Add => {
+                let result = v.checked_add(1)?;
+                if result < max {
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+pub fn valid_neigbors((x,y) : (usize,usize), m : usize, n : usize) -> Vec<(usize,usize)> {
+    use NeighborDirection::*;
+    [Sub,Same,Add].iter().flat_map(|x_dir| {
+        if let Some(n_x) = x_dir.apply(x,m) {
+            [Sub,Same,Add].iter().filter_map(|y_dir| {
+                Some( (n_x, y_dir.apply(y,n)?) )
+            }).collect::<Vec<_>>()
+        } else {
+            vec![]
+        }
+    }).filter(|(n_x,n_y)| x != *n_x || y != *n_y).collect()
+}
+
+pub fn valid_neigbors_no_diagonal((x,y) : (usize,usize), m : usize, n : usize) -> Vec<(usize,usize)> {
+    use NeighborDirection::*;
+    [Sub,Same,Add].iter().flat_map(|x_dir| {
+        if let Some(n_x) = x_dir.apply(x,m) {
+            [Sub,Same,Add].iter().filter_map(|y_dir| {
+                let n_y = y_dir.apply(y,n)?;
+                if n_x != x && n_y != y { None } else { Some( (n_x,n_y) ) }
+            }).collect::<Vec<_>>()
+        } else {
+            vec![]
+        }
+    }).filter(|(n_x,n_y)| x != *n_x || y != *n_y).collect()
+}
