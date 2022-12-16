@@ -7,6 +7,7 @@ pub mod point2d;
 
 use std::fs::File;
 use std::io::BufReader;
+use std::num::ParseIntError;
 use std::str::FromStr;
 use std::time::Instant;
 use std::{io, result};
@@ -20,6 +21,11 @@ pub enum Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         Error::IO(e)
+    }
+}
+impl From<ParseIntError> for Error {
+    fn from(_e: ParseIntError) -> Self {
+        Error::ParseFailed
     }
 }
 
@@ -89,7 +95,7 @@ enum NeighborDirection {
 }
 impl NeighborDirection {
     fn apply(&self, v: usize, max: usize) -> Option<usize> {
-        use NeighborDirection::{Add,Same,Sub};
+        use NeighborDirection::{Add, Same, Sub};
         match self {
             Sub => v.checked_sub(1),
             Same => Some(v),
